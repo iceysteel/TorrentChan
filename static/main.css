@@ -1,0 +1,40 @@
+body{
+    background-color: #bdc3c7;
+    color: #2c3e50;
+    font-family: monospace;
+}
+
+.post{
+    /*outline: 2px solid #7f8c8d; */
+    padding: 5px;
+    background-color: #ecf0f1;
+    display:inline-block;
+    margin: 5px;
+    float:left;
+    clear:both;
+    margin-left: 3em;
+}
+
+.thread{
+    padding: 5px;
+    background-color: #ecf0f1;
+    display:inline-block;
+    margin: 5px;
+    float:left;
+}
+
+
+a{
+    color:#3498db;
+}
+
+/* this is for the body of the post not the body html */
+.body{
+    display: inline;
+}
+
+
+.files{
+    display: inline;
+
+}
