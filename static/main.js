@@ -61,12 +61,11 @@ function consumeData(dataArray){
 	  appendToBody(thread, true)
 
 	  //now loop through the posts in the thread
-	  for (var j = 0, len = thread.posts.length; j < len; j++) {
+	  for (var j = 0, len2 = thread.posts.length; j < len2; j++) {
 	  	appendToBody(thread.posts[j], false);
 	  }
 
 	}
-
 }
 
 //this function was initially code just for threads that i modified
