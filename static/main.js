@@ -30,6 +30,7 @@ request.send();
 
 function sendThread(){
   var text = document.getElementById("comment").value;
+  var title = document.getElementById("titleentry").value;
   var afile = document.getElementById("fileupload").files[0];
   console.log(afile);
   console.log("NIGGERS");
@@ -41,7 +42,7 @@ function sendThread(){
     var threadRequest = new XMLHttpRequest();
     var data = new FormData();
     data.append('magnet', magnetLink);
-    data.append('title', text);
+    data.append('title', title);
 
     console.log(magnetLink);
     threadRequest.open('POST', '/post/thread/');//, "magnet=" + encodeURIComponent(magnetLink) + "&title=" + encodeURIComponent(text)); 
