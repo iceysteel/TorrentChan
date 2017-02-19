@@ -21,6 +21,7 @@ body{
     display:inline-block;
     margin: 5px;
     float:left;
+    clear:left;
 }
 
 .reply{
