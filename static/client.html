@@ -17,14 +17,14 @@
         
         
         <div class="reply">
-            <div class="replyintro"><b>New Thread:</b></div>
+            <div id="replyintro"><b>New Thread:</b></div>
             <form>
                 <p><input type="text" id="titleentry" placeholder="title"></input></p>
             <div class="textinput">
                 <textarea placeholder="Enter your comment here" name="comment" id="comment" rows="5" cols="35"></textarea>
                 </div>
                 <input id="fileupload" type="file"></input>
-            <input type="button" onClick="sendThread()"></input>
+            <input type="button" id="submitbutton" onClick="sendThread()" value="Submit"></input>
             
             </form>
         </div>

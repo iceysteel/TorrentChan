@@ -36,6 +36,13 @@ function sendThread(){
   console.log(afile);
   var textBlob = new Blob([text], {type : "text/plain"});
   var data = [textBlob, afile];
+
+  //afile is null if you didnt attach a file
+  if(!afile){
+  	alert('You tried to make a thread without an image!');
+  	return false;
+  }
+
   client.seed(data, function(torrent) {
     var magnetLink = torrent.magnetURI;
     var threadRequest = new XMLHttpRequest();
@@ -50,7 +57,8 @@ function sendThread(){
   return false;
 }
 
-function sendPost(post_id){
+//called when a user hits submit on a post to send it to the server
+function sendPost(post_id, thread_id){
   var text = document.getElementById("comment").value;
   var afile = document.getElementById("fileupload").files[0];
   console.log("NIGGERS");
@@ -68,20 +76,7 @@ function sendPost(post_id){
     data.append('magnet', magnetLink);
 
     console.log(magnetLink);
-    var thread_id = -1;
-    var threadlength = data.length;
-    for(var i = 0; i < threadlength; i++){
-      var postlength = data[i].posts.length;
-      for(var j = 0; j < postlength; j++){
-        if (data[i].posts[j].post_id == post_id){
-          console.log("found post thread");
-          thread_id = data[i].post_id;
-        }
-      }
-    }
-    if(thread_id == -1){
-      thread_id = post_id;
-    }
+
 
     threadRequest.open('POST', '/post/' + thread_id);
     threadRequest.send(data);
@@ -102,13 +97,14 @@ function consumeData(dataArray){
 
 	  //now loop through the posts in the thread
 	  for (var j = 0, len2 = thread.posts.length; j < len2; j++) {
-	  	appendToBody(thread.posts[j], false);
+	  	appendToBody(thread.posts[j], false, thread.post_id);
 	  }
 
 	}
 }
 
-function reply(post_id){
+//called when the user clicks a post number to reply to a post
+function reply(post_id, containing_thread_id){
   console.log("replied" + post_id);
   var textentry = document.getElementById("comment");
   var titleentry = document.getElementById("titleentry");
@@ -117,10 +113,11 @@ function reply(post_id){
   titleentry.style.display = "none";
   textentry.value = textentry.value + ">>" + post_id + "\n";
   replyintro.innerHTML = "<b>Reply to thread</b>";
-  submitbutton.setAttribute("onclick", "sendPost(" + post_id + ")");
+  submitbutton.setAttribute("onclick", "sendPost(" + post_id +','+ containing_thread_id + ")");
   return true;
 }
 
+//reverts the post form to posting a new thread
 function noreply(){
   var titleentry = document.getElementById("titleentry");
   var replyintro = document.getElementById("replyintro");
@@ -129,8 +126,9 @@ function noreply(){
 }
 
 //this function was initially code just for threads that i modified
-//too lazy to change the comments
-function appendToBody(thread, isThread){
+//too lazy to change the comments or varible names WATCH OUT
+//containing_thread_id is only for posts
+function appendToBody(thread, isThread, containing_thread_id){
 	var threadDiv = document.createElement('div');
 	threadDiv.setAttribute('class', 'thread');
 
@@ -138,7 +136,8 @@ function appendToBody(thread, isThread){
 	introP.setAttribute('class', 'intro');
 	//in the furture replace anoymous with poster ids and stuff
 
-	var replyString =  'No.<a href="javascript:void(0)" onclick=reply('+ thread.post_id +')>' + thread.post_id + '</a>';
+	//a thread will have its own post id as the containing thread
+	var replyString =  'No.<a href="javascript:void(0)" onclick=reply('+ thread.post_id + ','+ thread.post_id +')>' + thread.post_id + '</a>';
 
 	if(isThread){
 
@@ -148,9 +147,14 @@ function appendToBody(thread, isThread){
 		//introP.textContent =  + 'Anonymous' +  ' ' + thread.post_time + ' ' + 'No.' + thread.post_id;
 		
 	}else{
+		//if its just a regular post
 		threadDiv.setAttribute('class', 'post');
 		//introP.innerHTML = 'Anonymous' +  ' ' + thread.post_time + ' ' + 'No.' + thread.post_id;
 		introP.innerHTML = 'Anonymous' +  ' ' + thread.post_time + ' ' + replyString
+
+		//include the containing thread's id if its a post
+		replyString =  'No.<a href="javascript:void(0)" onclick=reply('+ thread.post_id +','+ containing_thread +')>' + thread.post_id + '</a>';
+
 
 	}
 	//this div will contain files (pictures and stuff) in the future

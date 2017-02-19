@@ -35,7 +35,7 @@ body{
     right: 0;
 }
 
-.replyintro{
+#replyintro{
     padding: 3px;
     margin: 3px;
     background-color: skyblue;
