@@ -28,6 +28,28 @@ request.onerror = function() {
 request.send();
 //-----------------end request code---------
 
+function sendThread(){
+  var text = document.getElementById("comment").value;
+  var afile = document.getElementById("fileupload").files[0];
+  console.log(afile);
+  console.log("NIGGERS");
+  var textBlob = new Blob([text], {type : "text/plain"});
+  var data = [textBlob, afile];
+  client.seed(data, function(torrent) {
+    console.log("IN CLIENT SEED");
+    var magnetLink = torrent.magnetURI;
+    var threadRequest = new XMLHttpRequest();
+    var data = new FormData();
+    data.append('magnet', magnetLink);
+    data.append('title', text);
+
+    console.log(magnetLink);
+    threadRequest.open('POST', '/post/thread/');//, "magnet=" + encodeURIComponent(magnetLink) + "&title=" + encodeURIComponent(text)); 
+    threadRequest.send(data);
+  });
+  return false;
+}
+
 //this function takes the parsed data and appends it to the html as post elements
 function consumeData(dataArray){
 	// the contents of data are in this format Arrayofthreads[thread[posts]]
