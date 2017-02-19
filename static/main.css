@@ -23,6 +23,35 @@ body{
     float:left;
 }
 
+.reply{
+    padding: 5px;
+    background-color: #ecf0f1;
+    display:inline-block;
+    margin: 5px;
+    float:right;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+
+.replyintro{
+    padding: 3px;
+    margin: 3px;
+    background-color: skyblue;
+}
+
+
+#comment{
+    width:95%;
+    text-indent: 0;
+    text-shadow: none;
+    text-transform: none;
+    word-spacing: normal;
+    font-size: inherit;
+    font-family: sans-serif;
+}
+
+
 
 a{
     color:#3498db;
