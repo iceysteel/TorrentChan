@@ -61,7 +61,6 @@ function sendThread(){
 function sendPost(post_id, thread_id){
   var text = document.getElementById("comment").value;
   var afile = document.getElementById("fileupload").files[0];
-  console.log("NIGGERS");
   var textBlob = new Blob([text], {type : "text/plain"});
   if(afile){
     var data = [textBlob, afile];
@@ -150,19 +149,16 @@ function appendToBody(thread, isThread, containing_thread_id){
 		//if its just a regular post
 		threadDiv.setAttribute('class', 'post');
 		//introP.innerHTML = 'Anonymous' +  ' ' + thread.post_time + ' ' + 'No.' + thread.post_id;
-		introP.innerHTML = 'Anonymous' +  ' ' + thread.post_time + ' ' + replyString
-
 		//include the containing thread's id if its a post
-		replyString =  'No.<a href="javascript:void(0)" onclick=reply('+ thread.post_id +','+ containing_thread +')>' + thread.post_id + '</a>';
+		replyString =  'No.<a href="javascript:void(0)" onclick=reply('+ thread.post_id +','+ containing_thread_id +')>' + thread.post_id + '</a>';
 
-
+		introP.innerHTML = 'Anonymous' +  ' ' + thread.post_time + ' ' + replyString
 	}
 	//this div will contain files (pictures and stuff) in the future
 	var filesDiv = document.createElement('div');
 	filesDiv.setAttribute('class', 'files');
 	var imgTag = document.createElement('img');
-	imgTag.setAttribute('height', '200')
-	imgTag.setAttribute('onclick', 'resize(this)')
+	
 
 
 	var postBody = document.createElement('div');
@@ -184,7 +180,13 @@ function appendToBody(thread, isThread, containing_thread_id){
 
 	  //can only render text files to an iframe, may change this later
 	  file.renderTo(postFrame);
-	  image.renderTo(imgTag);
+
+	  if(image){
+	  	imgTag.setAttribute('height', '200')
+		imgTag.setAttribute('onclick', 'resize(this)')
+	 	image.renderTo(imgTag);
+	  }	
+
 	})
 
 	filesDiv.appendChild(imgTag);
