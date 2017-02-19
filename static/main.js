@@ -9,10 +9,11 @@ client.on('error', function (err) { console.log(err);})
 var request = new XMLHttpRequest();
 request.open('GET', '/catalog', true);
 
+var data = [];
 request.onload = function() {
   if (this.status >= 200 && this.status < 400) {
     // Success! put parsed stuff in data
-    var data = JSON.parse(this.response);
+    data = JSON.parse(this.response);
     consumeData(data);
   } else {
     // We reached our target server, but it returned an error
@@ -33,11 +34,9 @@ function sendThread(){
   var title = document.getElementById("titleentry").value;
   var afile = document.getElementById("fileupload").files[0];
   console.log(afile);
-  console.log("NIGGERS");
   var textBlob = new Blob([text], {type : "text/plain"});
   var data = [textBlob, afile];
   client.seed(data, function(torrent) {
-    console.log("IN CLIENT SEED");
     var magnetLink = torrent.magnetURI;
     var threadRequest = new XMLHttpRequest();
     var data = new FormData();
@@ -45,10 +44,50 @@ function sendThread(){
     data.append('title', title);
 
     console.log(magnetLink);
-    threadRequest.open('POST', '/post/thread/');//, "magnet=" + encodeURIComponent(magnetLink) + "&title=" + encodeURIComponent(text)); 
+    threadRequest.open('POST', '/post/thread/');
     threadRequest.send(data);
   });
   return false;
+}
+
+function sendPost(post_id){
+  var text = document.getElementById("comment").value;
+  var afile = document.getElementById("fileupload").files[0];
+  console.log("NIGGERS");
+  var textBlob = new Blob([text], {type : "text/plain"});
+  if(afile){
+    var data = [textBlob, afile];
+  }
+  else{
+    var data = [textBlob];
+  }
+  client.seed(data, function(torrent) {
+    var magnetLink = torrent.magnetURI;
+    var threadRequest = new XMLHttpRequest();
+    var data = new FormData();
+    data.append('magnet', magnetLink);
+
+    console.log(magnetLink);
+    var thread_id = -1;
+    var threadlength = data.length;
+    for(var i = 0; i < threadlength; i++){
+      var postlength = data[i].posts.length;
+      for(var j = 0; j < postlength; j++){
+        if (data[i].posts[j].post_id == post_id){
+          console.log("found post thread");
+          thread_id = data[i].post_id;
+        }
+      }
+    }
+    if(thread_id == -1){
+      thread_id = post_id;
+    }
+
+    threadRequest.open('POST', '/post/' + thread_id);
+    threadRequest.send(data);
+  });
+  return false;
+
 }
 
 //this function takes the parsed data and appends it to the html as post elements
@@ -69,6 +108,26 @@ function consumeData(dataArray){
 	}
 }
 
+function reply(post_id){
+  console.log("replied" + post_id);
+  var textentry = document.getElementById("comment");
+  var titleentry = document.getElementById("titleentry");
+  var replyintro = document.getElementById("replyintro");
+  var submitbutton = document.getElementById("submitbutton");
+  titleentry.style.display = "none";
+  textentry.value = textentry.value + ">>" + post_id + "\n";
+  replyintro.innerHTML = "<b>Reply to thread</b>";
+  submitbutton.setAttribute("onclick", "sendPost(" + post_id + ")");
+  return true;
+}
+
+function noreply(){
+  var titleentry = document.getElementById("titleentry");
+  var replyintro = document.getElementById("replyintro");
+  titleentry.style.display = "inherit";
+  replyintro.innerHTML = "<b>New Thread:</b>";
+}
+
 //this function was initially code just for threads that i modified
 //too lazy to change the comments
 function appendToBody(thread, isThread){
@@ -79,7 +138,7 @@ function appendToBody(thread, isThread){
 	introP.setAttribute('class', 'intro');
 	//in the furture replace anoymous with poster ids and stuff
 
-	var replyString =  'No.<a onclick=reply('+ thread.post_id +')>' + thread.post_id + '</a>';
+	var replyString =  'No.<a href="javascript:void(0)" onclick=reply('+ thread.post_id +')>' + thread.post_id + '</a>';
 
 	if(isThread){
 
@@ -91,7 +150,7 @@ function appendToBody(thread, isThread){
 	}else{
 		threadDiv.setAttribute('class', 'post');
 		//introP.innerHTML = 'Anonymous' +  ' ' + thread.post_time + ' ' + 'No.' + thread.post_id;
-		introP.textContent = 'Anonymous' +  ' ' + thread.post_time + ' ' + replyString
+		introP.innerHTML = 'Anonymous' +  ' ' + thread.post_time + ' ' + replyString
 
 	}
 	//this div will contain files (pictures and stuff) in the future
