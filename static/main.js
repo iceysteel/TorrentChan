@@ -6,6 +6,7 @@ client.on('error', function (err) { console.log(err);})
 
 //make request to server get the catalog, 
 //right now this also has all the contents for every thread
+
 var request = new XMLHttpRequest();
 request.open('GET', '/catalog', true);
 
@@ -28,6 +29,32 @@ request.onerror = function() {
 
 request.send();
 //-----------------end request code---------
+
+//TODO: FINISH THIS SHIT!!!
+function updateThread(thread_id){
+	var thread_request = new XMLHttpRequest();
+	thread_request.open('GET', '/catalog', true);
+
+	var data = [];
+	request.onload = function() {
+	  if (this.status >= 200 && this.status < 400) {
+	    // Success! put parsed stuff in data
+	    data = JSON.parse(this.response);
+	    consumeData(data);
+	  } else {
+	    // We reached our target server, but it returned an error
+	    console.log('server fucked up fam')
+	  }
+	};
+
+	request.onerror = function() {
+	  // There was a connection error of some sort
+	  console.log('connection error')
+	};
+
+	request.send();
+}
+
 
 function sendThread(){
   var text = document.getElementById("comment").value;
@@ -95,12 +122,61 @@ function consumeData(dataArray){
 	  appendToBody(thread, true)
 
 	  //now loop through the posts in the thread
-	  for (var j = 0, len2 = thread.posts.length; j < len2; j++) {
-	  	appendToBody(thread.posts[j], false, thread.post_id);
+	  //for (var j = 0, len2 = thread.posts.length; j < len2; j++) {
+	  if(thread.posts.length < 3){
+	  	for(var j = 0, len2 = thread.posts.length; j < len2; j++){ 
+	  		appendToBody(thread.posts[j], false, thread.post_id);
+	  	}
+	  }else{
+	  	//normal case, thread had more than 3 posts also display show posts
+	  	for(var j = 0; j < 3; j++){
+	  		appendToBody(thread.posts[j], false, thread.post_id);
+	  	}
+
+	  	appendShowPosts(thread);
 	  }
 
 	}
 }
+
+//this function appends a div that the user can use to expand threads
+function appendShowPosts(thread){
+	var threadDiv = document.createElement('div');
+	threadDiv.setAttribute('class', 'thread');
+
+	var introP = document.createElement('p');
+	introP.setAttribute('class', 'intro');
+
+	threadDiv.setAttribute('class', 'post');
+	link = '<a href="javascript:void(0)" onclick="expand(' + thread.post_id + ', this)">'
+	//find a way to do this the textcontent way, cause this is a security problem
+	introP.innerHTML = '<b>'+ (thread.posts.length-3).toString() + " posts hidden." + '</b> ' + link + 'Click to expand' + '</a>';
+	threadDiv.appendChild(introP);
+	//change this line later when we make a container
+	document.body.appendChild(threadDiv);
+		
+}
+
+//function thats called when user clicks show posts to 
+function expand(thread_id, callingElement){
+	for (var i = 0, len = data.length; i < len; i++) {
+	  thread = data[i];
+
+	  //now loop through the posts in the thread
+	  //for (var j = 0, len2 = thread.posts.length; j < len2; j++) {
+	  if(thread.thread_id === thread_id){
+
+	  	callingDiv = callingElement.parentNode.parentNode;
+
+	  	console.log(callingDiv);
+	  	for(var j = 3, len2 = thread.posts.length; j < len2; j++){ 
+	  		appendToBody(thread.posts[j], false, thread.post_id, callingDiv);
+	  	}
+	  }
+
+	}
+}
+
 
 //called when the user clicks a post number to reply to a post
 function reply(post_id, containing_thread_id){
@@ -127,7 +203,7 @@ function noreply(){
 //this function was initially code just for threads that i modified
 //too lazy to change the comments or varible names WATCH OUT
 //containing_thread_id is only for posts
-function appendToBody(thread, isThread, containing_thread_id){
+function appendToBody(thread, isThread, containing_thread_id, callingDiv){
 	var threadDiv = document.createElement('div');
 	threadDiv.setAttribute('class', 'thread');
 
@@ -168,6 +244,7 @@ function appendToBody(thread, isThread, containing_thread_id){
 	//the post text or eventually html gets dropped into iframe elements for security
 	var postFrame = document.createElement('iframe');
 	postFrame.setAttribute('frameBorder', '0')
+	postFrame.setAttribute("onload", "this.style.height=this.contentDocument.body.scrollHeight +'px';")
 
 	//postP.innerHTML = 'magnet link: ' + thread.post_magnet_uri;
 	var torrentId = thread.post_magnet_uri;  
@@ -197,8 +274,14 @@ function appendToBody(thread, isThread, containing_thread_id){
 	threadDiv.appendChild(filesDiv);
 	threadDiv.appendChild(postBody);
 
+	if(callingDiv){
+		callingDiv.innerHTML = '';
+		callingDiv.removeAttribute('class');
+		callingDiv.appendChild(threadDiv);
+	}else{
 	//change this line later when we make a container
 	document.body.appendChild(threadDiv);
+	}
 }
 
 function resize(element){
