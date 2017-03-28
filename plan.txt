@@ -18,10 +18,17 @@ TODO:
 	-write very simple frontend code that requests contents.json from flask and displays contents
 	-integrate webtorrent to make images and posts work
 	-make client hit api and show catalog
+	-make frontend turn new posts into magnet links
+	-make client able to post and start new threads
 
 	need to be done:
-	-make frontend turn new posts into magnet links
-
+	-need to deauthenitcate posters every 24 hours
+	-tell posters when they are not authenicated
 	-make client show reply view for thread
-	
-	-make client able to post and start new threads
+	-be able to go back to starting a thread after you reply to a thread
+	-some way to refresh page without losing all the torrents
+	-admin panel (remove posters from allowed posters and delete threads)
+	-multiple boards
+	-detect large files client side and be able to click to download
+
+
