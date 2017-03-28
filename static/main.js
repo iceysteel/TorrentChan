@@ -185,6 +185,8 @@ function reply(post_id, containing_thread_id){
   var titleentry = document.getElementById("titleentry");
   var replyintro = document.getElementById("replyintro");
   var submitbutton = document.getElementById("submitbutton");
+  var diebutton = document.getElementById("diebutton");
+  diebutton.style.display = "inline-block";
   titleentry.style.display = "none";
   textentry.value = textentry.value + ">>" + post_id + "\n";
   replyintro.innerHTML = "<b>Reply to thread</b>";
@@ -196,6 +198,8 @@ function reply(post_id, containing_thread_id){
 function noreply(){
   var titleentry = document.getElementById("titleentry");
   var replyintro = document.getElementById("replyintro");
+  var diebutton = document.getElementById("diebutton");
+  diebutton.style.display = "none";
   titleentry.style.display = "inherit";
   replyintro.innerHTML = "<b>New Thread:</b>";
 }
