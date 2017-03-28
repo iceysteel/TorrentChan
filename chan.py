@@ -2,10 +2,12 @@ from flask import Flask
 #use markup later to escape html in strings that come from users
 from flask import Markup
 from flask import request
+from flask import send_file, render_template
 from io import BytesIO
 from captcha.image import ImageCaptcha
 import json
 from time import gmtime, strftime
+from random import randint
 
 #REMOVE IN PRODUCTION FOR TESTING ONLY
 if __name__ == '__main__':
@@ -42,11 +44,11 @@ class Captcha(object):
 		self.image = image
 		self.answer = answer
 		self.active = True
-	def isActive():
+	def isActive(self):
 		return self.active
-	def checkAnswer(response):
-		active = False
-		return answer == response
+	def checkAnswer(self, response):
+		self.active = False
+		return self.answer == response
 #---------------end classes-----------
 
 #list that will hold all the threads on the chan in memory
@@ -115,17 +117,21 @@ def create_post(thread_id):
 	#error = None
 	if request.method == 'POST':
 		#make sure we were sent the right data
-		if request.form['magnet'] and request.remote_addr in allowed_posters:
-			if get_thread_by_id(thread_id) == None:
-				return 'there was a problem finding thread#' + str(thread_id)
+		if request.form['magnet']:
+			if request.remote_addr in allowed_posters:
+				if get_thread_by_id(thread_id) == None:
+					return 'there was a problem finding thread#' + str(thread_id)
+				else:
+					#calculate the new id
+					global post_count
+					post_count = post_count + 1
+					#create a new post and append to the 
+					new_post = Post(post_count, request.form['magnet'])
+					#sometimes i really love these one liners you can make in python
+					get_thread_by_id(thread_id).posts.append(new_post)
 			else:
-				#calculate the new id
-				global post_count
-				post_count = post_count + 1
-				#create a new post and append to the 
-				new_post = Post(post_count, request.form['magnet'])
-				#sometimes i really love these one liners you can make in python
-				get_thread_by_id(thread_id).posts.append(new_post)
+				#if we're here then the poster isnt in the posters list
+				return 'poster IP not authorized'
 	else:
 		return 'wrong kinda request bro.'
 
@@ -136,13 +142,17 @@ def create_post(thread_id):
 def create_thread():
 	global allowed_posters
 	if request.method == 'POST':
-		if request.form['magnet'] and request.form['title'] and request.remote_addr in allowed_posters:
-			#calculate the new id
-			global post_count
-			post_count = post_count + 1
-			#create a new post and append to the 
-			new_thread = Thread(post_count, request.form['magnet'], request.form['title'])
-			global_threads.append(new_thread)
+		if request.form['magnet'] and request.form['title']:
+			if request.remote_addr in allowed_posters:
+				#calculate the new id
+				global post_count
+				post_count = post_count + 1
+				#create a new post and append to the 
+				new_thread = Thread(post_count, request.form['magnet'], request.form['title'])
+				global_threads.append(new_thread)
+			else:
+				#if we're in here this means that the poster isnt in the allowed posters list
+				return 'poster IP not authorized'
 	else:
 		return 'wrong kinda request bro.'
 
@@ -155,15 +165,28 @@ def manage_captcha():
 	global allowed_posters
 	if request.method == 'POST':
 		if request.form['captchanum'] and request.form['answer']:
-			if request.form['captchanum'] <= global_captchas.length:
-				if global_captchas[int(request.form['captchanum'])].isActive() and global_captchas[int(request.form['captchanum'])].checkAnswer(request.form['answer']):
-					allowed_posters.add(request.remote_addr)
+			#these next two lines are nasty, maybe use a varible?
+			if int(request.form['captchanum']) <= len(global_captchas):
+				if global_captchas[int(request.form['captchanum'])-1].isActive() and global_captchas[int(request.form['captchanum'])-1].checkAnswer(request.form['answer']):
+					allowed_posters.append(request.remote_addr)
+					#print(str(request.remote_addr) + ' added to allowed_posters')
+					#add a line in here to get rid of the file
+					return "Success, you may now go back and post"
+				else:
+					return "there was an error, please try again"
+			else:
+				return "there was an error with the captcha, please try again " + str(request.form['captchanum']) + " "+  str(len(global_captchas)) 
 	elif request.method == 'GET':
+		random = str(randint(1000,9999))
 		image = ImageCaptcha(fonts=['/usr/share/fonts/TTF/DejaVuSans.ttf', '/usr/share/fonts/TTF/DejaVuSerif.ttf'])
-		data = image.generate('1234')
-		assert isinstance(data, BytesIO)
-		image.write('1234', global_captchas.length + '.png')
-		global_captchas.add(Captcha(global_captchas.length + '.png', '1234'))
-		return send_file(global_captchas.length + '.png')
+		data = image.generate(random)
+		#assert isinstance(data, BytesIO)
+		#ok maybe making this filename is inefficent
+		name = str(len(global_captchas)+1)
+		#put the new file in the templates folder so the template can use it (i feel like this is bad)
+		image.write(random, 'static/' + name + '.png')
+		global_captchas.append(Captcha('static/' + name + '.png', random))
+		#return send_file(str(len(global_captchas)) + '.png')
+		return render_template('captcha.html', name=str(len(global_captchas)) )
 	else:
 		return "WUT U DID SOMETHING WRONG"
