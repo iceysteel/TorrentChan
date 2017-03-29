@@ -252,10 +252,15 @@ function appendToBody(thread, isThread, containing_thread_id, callingDiv){
 
 	//postP.innerHTML = 'magnet link: ' + thread.post_magnet_uri;
 	var torrentId = thread.post_magnet_uri;  
+	var cancel = false;
 
 	//this is where we fetch the torrent
 	client.add(torrentId, function (torrent) {
 	  // first file is the post, second is the image for now
+	  torrent.on('metadata',function() {
+			  if (torrent.file.length > 4000000)
+			  	torrent.pause();
+			  });
 	  var file = torrent.files[0];
 	  var image = torrent.files[1];
 
@@ -268,7 +273,7 @@ function appendToBody(thread, isThread, containing_thread_id, callingDiv){
 	 	image.renderTo(imgTag);
 	  }	
 
-	})
+	}) 
 
 	filesDiv.appendChild(imgTag);
 	postBody.appendChild(postFrame);
