@@ -20,12 +20,12 @@ TODO:
 	-make client hit api and show catalog
 	-make frontend turn new posts into magnet links
 	-make client able to post and start new threads
+	-be able to go back to starting a thread after you reply to a thread
 
 	need to be done:
 	-need to deauthenitcate posters every 24 hours
 	-tell posters when they are not authenicated
 	-make client show reply view for thread
-	-be able to go back to starting a thread after you reply to a thread
 	-some way to refresh page without losing all the torrents
 	-admin panel (remove posters from allowed posters and delete threads)
 	-multiple boards
