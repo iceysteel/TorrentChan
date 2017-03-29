@@ -54,6 +54,9 @@ class Captcha(object):
 #list that will hold all the threads on the chan in memory
 global_threads = []
 
+#dict of boards in the chan, that each have an array like global_threads
+boards = {'a':[], 'tech':[], 'b':[], 'meta':[], 'pol':[]}
+
 #list of active captcha objects
 global_captchas = []
 
@@ -80,15 +83,15 @@ global_threads.append(testThread)
 #CHANGE THIS BACK TO 0 AT SOME POINT
 post_count = 2
 
-def get_thread_by_id(thread_id_to_find):
+def get_thread_by_id(thread_id_to_find, board_letter):
 #please forgive me, this method is fucking awful, 
 #fix the algroithm and make it binary search asap
-	return next((thread for thread in global_threads if thread.post_id==thread_id_to_find), None)
+	return next((thread for thread in boards[board_letter] if thread.post_id==thread_id_to_find), None)
 
 #-----------------application routes -------------------
 #since this is served statically it needs to be removed once nginix is setup
-@app.route('/')
-def index():
+@app.route('/<string:board_letter>/')
+def index(board_letter):
 	return app.send_static_file('client.html')
 
 
@@ -98,28 +101,31 @@ def temp_static_files(static_file):
 	return app.send_static_file(static_file)
 
 
-@app.route("/catalog")
-def hello():
-    return json.dumps(global_threads, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+@app.route("/<string:board_letter>/catalog")
+def catalog(board_letter):
+    return json.dumps(boards[board_letter], default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
+
+#NEEDS TO BE UPDATED TO WORK WITH BOARDS
+#isnt actually used right now so i didnt bother
 #returns contents of a thread
-@app.route("/thread/<int:thread_id>")
-def show_thread(thread_id):
-	if get_thread_by_id(thread_id) == None:
-		return 'there was a problem finding thread#' + str(thread_id)
-	else:
-		return get_thread_by_id(thread_id).toJSON()
+# @app.route("/<string:board_letter>/thread/<int:thread_id>")
+# def show_thread(thread_id):
+# 	if get_thread_by_id(thread_id) == None:
+# 		return 'there was a problem finding thread#' + str(thread_id)
+# 	else:
+# 		return get_thread_by_id(thread_id).toJSON()
 
 #this route takes POST requests and adds a post to a thread
-@app.route("/post/<int:thread_id>", methods=['GET','POST'])
-def create_post(thread_id):
+@app.route("/<string:board_letter>/post/<int:thread_id>", methods=['GET','POST'])
+def create_post(thread_id, board_letter):
 	global allowed_posters
 	#error = None
 	if request.method == 'POST':
 		#make sure we were sent the right data
 		if request.form['magnet']:
 			if request.remote_addr in allowed_posters:
-				if get_thread_by_id(thread_id) == None:
+				if get_thread_by_id(thread_id, board_letter) == None:
 					return 'there was a problem finding thread#' + str(thread_id)
 				else:
 					#calculate the new id
@@ -128,7 +134,7 @@ def create_post(thread_id):
 					#create a new post and append to the 
 					new_post = Post(post_count, request.form['magnet'])
 					#sometimes i really love these one liners you can make in python
-					get_thread_by_id(thread_id).posts.append(new_post)
+					get_thread_by_id(thread_id, board_letter).posts.append(new_post)
 			else:
 				#if we're here then the poster isnt in the posters list
 				return 'poster IP not authorized'
@@ -138,8 +144,8 @@ def create_post(thread_id):
 	return 'OK'
 
 #this route makes a new thread
-@app.route('/post/thread/', methods=['GET','POST'])
-def create_thread():
+@app.route('/<string:board_letter>/post/thread/', methods=['GET','POST'])
+def create_thread(board_letter):
 	global allowed_posters
 	if request.method == 'POST':
 		if request.form['magnet'] and request.form['title']:
@@ -149,7 +155,7 @@ def create_thread():
 				post_count = post_count + 1
 				#create a new post and append to the 
 				new_thread = Thread(post_count, request.form['magnet'], request.form['title'])
-				global_threads.append(new_thread)
+				boards[board_letter].append(new_thread)
 			else:
 				#if we're in here this means that the poster isnt in the allowed posters list
 				return 'poster IP not authorized'

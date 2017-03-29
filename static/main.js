@@ -8,7 +8,7 @@ client.on('error', function (err) { console.log(err);})
 //right now this also has all the contents for every thread
 
 var request = new XMLHttpRequest();
-request.open('GET', '/catalog', true);
+request.open('GET', window.location.pathname + 'catalog', true);
 
 var data = [];
 request.onload = function() {
@@ -78,7 +78,7 @@ function sendThread(){
     data.append('title', title);
 
     console.log(magnetLink);
-    threadRequest.open('POST', '/post/thread/');
+    threadRequest.open('POST', window.location.pathname +'post/thread/');
     threadRequest.send(data);
   });
   return false;
@@ -104,7 +104,7 @@ function sendPost(post_id, thread_id){
     console.log(magnetLink);
 
 
-    threadRequest.open('POST', '/post/' + thread_id);
+    threadRequest.open('POST',  window.location.pathname + 'post/' + thread_id);
     threadRequest.send(data);
   });
   return false;
