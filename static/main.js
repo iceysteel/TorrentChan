@@ -257,10 +257,17 @@ function appendToBody(thread, isThread, containing_thread_id, callingDiv){
 	//this is where we fetch the torrent
 	client.add(torrentId, function (torrent) {
 	  // first file is the post, second is the image for now
-	  torrent.on('metadata',function() {
-			  if (torrent.file.length > 4000000)
-			  	torrent.pause();
-			  });
+	  //torrent.on('metadata',function() {
+			  //if (torrent.file.length > 4000000)
+			  //	torrent.pause();
+			  //});
+	  if(torrent.length > 4000000){
+	  	torrent.pause();
+	  	//this line doesnt actually delete the torrent if some has been downloaded already
+	  	client.remove(torrent);
+	  	console.log('torrent too large removed from client')
+	  }
+
 	  var file = torrent.files[0];
 	  var image = torrent.files[1];
 

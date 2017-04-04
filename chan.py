@@ -94,6 +94,16 @@ def get_thread_by_id(thread_id_to_find, board_letter):
 def index(board_letter):
 	return app.send_static_file('client.html')
 
+@app.route('/admin')
+def admin():
+	if(request.method == 'GET'):
+		if(request.remote_addr = '127.0.0.1')
+		#now we know the admin is on the server (yeah I know this is bad)
+		return request.remote_addr
+
+	return "you are not allowed"
+	
+
 
 #HUGE SECURITY PROBLEM, REMOVE WHEN GOING TO PRODUCTION
 @app.route('/static/<string:static_file>')

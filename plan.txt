@@ -21,14 +21,17 @@ TODO:
 	-make frontend turn new posts into magnet links
 	-make client able to post and start new threads
 	-be able to go back to starting a thread after you reply to a thread
+    -multiple boards
 
 	need to be done:
 	-need to deauthenitcate posters every 24 hours
 	-tell posters when they are not authenicated
 	-make client show reply view for thread
 	-some way to refresh page without losing all the torrents
+
 	-admin panel (remove posters from allowed posters and delete threads)
-	-multiple boards
-	-detect large files client side and be able to click to download
+
+	-detect large files client side and be able to click to download(UNFINISHED AND IMPORTANT)
+	-rating system and autohide threads under a certain threshold
 
 
