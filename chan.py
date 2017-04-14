@@ -19,18 +19,20 @@ app = Flask(__name__, static_url_path='/static/')
 #---------------classes for main data structures
 class Post(object):
 	"""each post is its own little torrent, this contains all the data to dl it"""
-	def __init__(self, id, magnet):
+	def __init__(self, id, magnet, pster):
 		self.post_id = id
 		self.post_magnet_uri = magnet
 		self.reputation = 0
 		#post time is a string
 		self.post_time = strftime("%Y-%m-%d+%H:%M:%S", gmtime())
+		#the poster's ip address
+		self.poster = pster
 
 
 class Thread(Post):
 	"""a thread is a post that has an array of other posts related to that thread in it"""
-	def __init__(self, thr_id, magnet, title_param):
-		super(Thread, self).__init__(thr_id, magnet)
+	def __init__(self, thr_id, magnet, title_param, pster):
+		super(Thread, self).__init__(thr_id, magnet, pster)
 		self.title = title_param
 		self.thread_id = thr_id
 		#the array of posts in this thread
@@ -51,8 +53,8 @@ class Captcha(object):
 		return self.answer == response
 #---------------end classes-----------
 
-#list that will hold all the threads on the chan in memory
-global_threads = []
+#list that will hold all the threads on the chan in memory NOT USED ANYMORE
+#global_threads = []
 
 #dict of boards in the chan, that each have an array like global_threads
 boards = {'a':[], 'tech':[], 'b':[], 'meta':[], 'pol':[]}
@@ -61,10 +63,13 @@ boards = {'a':[], 'tech':[], 'b':[], 'meta':[], 'pol':[]}
 global_captchas = []
 
 #list of all allowed posters
-allowed_posters = []
+allowed_posters = ['127.0.0.1']
+
+#a list of ip addresses that have been banned.
+banned_posters = []
 
 #a hardcoded thread for testing
-testThread = Thread(0, 'magnet:?xt=urn:btih:01047ad40ce0ee28f729d6181083207c22f452ff&dn=post.txt&tr=udp%3A%2F%2Fexodus.desync.com%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com', 'This is the first thread!')
+#testThread = Thread(0, 'magnet:?xt=urn:btih:01047ad40ce0ee28f729d6181083207c22f452ff&dn=post.txt&tr=udp%3A%2F%2Fexodus.desync.com%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com', 'This is the first thread!')
 
 #testPost = Post(1, 'magnet::this is another magnet link')
 #testPost2 = Post(2, 'magnet::this is another another magnet link')
@@ -73,7 +78,7 @@ testThread = Thread(0, 'magnet:?xt=urn:btih:01047ad40ce0ee28f729d6181083207c22f4
 #testThread.posts.append(testPost2)
 
 
-global_threads.append(testThread)
+#global_threads.append(testThread)
 #testThread.title = "this not a test"
 #testThread.thread_id = 5
 #global_threads.append(testThread)
@@ -81,7 +86,9 @@ global_threads.append(testThread)
 
 #global post counter to be used for ids
 #CHANGE THIS BACK TO 0 AT SOME POINT
-post_count = 2
+
+#uhh right now post counts are shared between all boards
+post_count = 0
 
 def get_thread_by_id(thread_id_to_find, board_letter):
 #please forgive me, this method is fucking awful, 
@@ -94,12 +101,16 @@ def get_thread_by_id(thread_id_to_find, board_letter):
 def index(board_letter):
 	return app.send_static_file('client.html')
 
-@app.route('/admin')
-def admin():
+@app.route('/<string:board_letter>/admin', methods=['GET','POST'])
+def admin(board_letter):
 	if(request.method == 'GET'):
-		if(request.remote_addr = '127.0.0.1')
-		#now we know the admin is on the server (yeah I know this is bad)
-		return request.remote_addr
+		if(request.remote_addr == '127.0.0.1'):
+			#now we know the admin is on the server (yeah I know this is bad)
+			return render_template('admin.html', boardData=boards[board_letter] )
+	elif(request.method == 'POST'):
+		if(request.remote_addr == '127.0.0.1'):
+			#getting a request from the admin panel
+			print request.form['deletePost']
 
 	return "you are not allowed"
 	
@@ -142,7 +153,7 @@ def create_post(thread_id, board_letter):
 					global post_count
 					post_count = post_count + 1
 					#create a new post and append to the 
-					new_post = Post(post_count, request.form['magnet'])
+					new_post = Post(post_count, request.form['magnet'], request.remote_addr)
 					#sometimes i really love these one liners you can make in python
 					get_thread_by_id(thread_id, board_letter).posts.append(new_post)
 			else:
@@ -164,7 +175,7 @@ def create_thread(board_letter):
 				global post_count
 				post_count = post_count + 1
 				#create a new post and append to the 
-				new_thread = Thread(post_count, request.form['magnet'], request.form['title'])
+				new_thread = Thread(post_count, request.form['magnet'], request.form['title'], request.remote_addr)
 				boards[board_letter].append(new_thread)
 			else:
 				#if we're in here this means that the poster isnt in the allowed posters list
