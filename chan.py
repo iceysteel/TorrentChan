@@ -8,6 +8,7 @@ from captcha.image import ImageCaptcha
 import json
 from time import gmtime, strftime
 from random import randint
+import os
 
 #REMOVE IN PRODUCTION FOR TESTING ONLY
 if __name__ == '__main__':
@@ -101,6 +102,10 @@ def get_thread_by_id(thread_id_to_find, board_letter):
 def index(board_letter):
 	return app.send_static_file('client.html')
 
+@app.route('/')
+def landing():
+	return app.send_static_file('index.html')
+
 @app.route('/<string:board_letter>/admin', methods=['GET','POST'])
 def admin(board_letter):
 	if(request.method == 'GET'):
@@ -192,12 +197,14 @@ def manage_captcha():
 	global allowed_posters
 	if request.method == 'POST':
 		if request.form['captchanum'] and request.form['answer']:
-			#these next two lines are nasty, maybe use a varible?
+			#these next two lines are nasty, maybe use a varible? MAKE A FUCKING VARIBLE
 			if int(request.form['captchanum']) <= len(global_captchas):
 				if global_captchas[int(request.form['captchanum'])-1].isActive() and global_captchas[int(request.form['captchanum'])-1].checkAnswer(request.form['answer']):
 					allowed_posters.append(request.remote_addr)
 					#print(str(request.remote_addr) + ' added to allowed_posters')
-					#add a line in here to get rid of the file
+					#remove the file from the array of active captchas and delete the file.
+					global_captchas.remove(global_captchas[int(request.form['captchanum'])-1])
+					os.remove('static/' + str(int(request.form['captchanum'])-1) + '.png')
 					return "Success, you may now go back and post"
 				else:
 					return "there was an error, please try again"
