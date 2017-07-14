@@ -27,6 +27,8 @@ TODO:
 	-need to deauthenitcate posters every 24 hours
 	-tell posters when they are not authenicated
 	-make client show reply view for thread
+
+	
 	-some way to refresh page without losing all the torrents
 
 	-admin panel (remove posters from allowed posters and delete threads)
@@ -35,3 +37,8 @@ TODO:
 	-rating system and autohide threads under a certain threshold
 
 
+BEFORE RELEASE:
+*clean strings
+*remove all testing server shit
+* tell people when they can't post cause they havent filled captcha
+* some way to save the database

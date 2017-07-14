@@ -12,7 +12,7 @@ import os
 
 #REMOVE IN PRODUCTION FOR TESTING ONLY
 if __name__ == '__main__':
-      app.run(host='0.0.0.0', port=80)
+      app.run(host='0.0.0.0', port=80,threaded=True)
 
 #remove the static url path varible when we go to production
 app = Flask(__name__, static_url_path='/static/')
@@ -70,7 +70,6 @@ allowed_posters = ['127.0.0.1']
 banned_posters = []
 
 #a hardcoded thread for testing
-#testThread = Thread(0, 'magnet:?xt=urn:btih:01047ad40ce0ee28f729d6181083207c22f452ff&dn=post.txt&tr=udp%3A%2F%2Fexodus.desync.com%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com', 'This is the first thread!')
 
 #testPost = Post(1, 'magnet::this is another magnet link')
 #testPost2 = Post(2, 'magnet::this is another another magnet link')
@@ -89,7 +88,7 @@ banned_posters = []
 #CHANGE THIS BACK TO 0 AT SOME POINT
 
 #uhh right now post counts are shared between all boards
-post_count = 0
+post_count = {'a':0, 'tech':0, 'b':0, 'meta':0, 'pol':0}
 
 def get_thread_by_id(thread_id_to_find, board_letter):
 #please forgive me, this method is fucking awful, 
@@ -100,7 +99,8 @@ def get_thread_by_id(thread_id_to_find, board_letter):
 #since this is served statically it needs to be removed once nginix is setup
 @app.route('/<string:board_letter>/')
 def index(board_letter):
-	return app.send_static_file('client.html')
+	if board_letter in boards:
+		return app.send_static_file('client.html')
 
 @app.route('/')
 def landing():
@@ -156,9 +156,9 @@ def create_post(thread_id, board_letter):
 				else:
 					#calculate the new id
 					global post_count
-					post_count = post_count + 1
+					post_count[board_letter] = post_count[board_letter] + 1
 					#create a new post and append to the 
-					new_post = Post(post_count, request.form['magnet'], request.remote_addr)
+					new_post = Post(post_count[board_letter], request.form['magnet'], request.remote_addr)
 					#sometimes i really love these one liners you can make in python
 					get_thread_by_id(thread_id, board_letter).posts.append(new_post)
 			else:
@@ -167,7 +167,17 @@ def create_post(thread_id, board_letter):
 	else:
 		return 'wrong kinda request bro.'
 
-	return 'OK'
+	return str(post_count[board_letter])
+
+@app.route("/<string:board_letter>/posts/<int:thread_id>/<int:post_id>", methods=['GET'])
+def get_post(board_letter, thread_id, post_id):
+	if request.method == "GET":
+		if 0 <= post_id:
+			#WORKING ON THIS
+			return json.dumps(boards[board_letter][thread_id].posts[].find, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+		return 'post id failure'
+	return 'request failure'
+
 
 #this route makes a new thread
 @app.route('/<string:board_letter>/post/thread/', methods=['GET','POST'])
@@ -178,9 +188,9 @@ def create_thread(board_letter):
 			if request.remote_addr in allowed_posters:
 				#calculate the new id
 				global post_count
-				post_count = post_count + 1
+				post_count[board_letter] = post_count[board_letter] + 1
 				#create a new post and append to the 
-				new_thread = Thread(post_count, request.form['magnet'], request.form['title'], request.remote_addr)
+				new_thread = Thread(post_count[board_letter], request.form['magnet'], request.form['title'], request.remote_addr)
 				boards[board_letter].append(new_thread)
 			else:
 				#if we're in here this means that the poster isnt in the allowed posters list
@@ -188,7 +198,17 @@ def create_thread(board_letter):
 	else:
 		return 'wrong kinda request bro.'
 
-	return 'OK'
+	return str(post_count[board_letter])
+
+
+#gets a singe threads json, used to update threads on the page individually
+@app.route('/<string:board_letter>/thread/<int:thread_id>', methods=['GET'])
+def get_thread(board_letter, thread_id):
+	if request.method == "GET":
+		if 0 <= thread_id < len(boards[board_letter]):
+			return json.dumps(boards[board_letter][thread_id], default=lambda o: o.__dict__, sort_keys=True, indent=4)
+
+
 
 #this route gets or posts captcha
 @app.route('/captcha/', methods=['GET','POST'])

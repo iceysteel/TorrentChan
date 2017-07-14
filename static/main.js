@@ -30,29 +30,43 @@ request.onerror = function() {
 request.send();
 //-----------------end request code---------
 
-//TODO: FINISH THIS SHIT!!!
-function updateThread(thread_id){
+//updates threads without changing the page
+function updateThread(newTorrent, thread_id, isPost, post_id){
 	var thread_request = new XMLHttpRequest();
-	thread_request.open('GET', '/catalog', true);
+	//this request is broken and needs to be fixed!!------------------------------
+	if(isPost){
+		//if its a post and not a thread
+		thread_request.open('GET', window.location.pathname + 'posts/' + (parseInt(thread_id))  + '/'+ (parseInt(post_id)), true);
+	}
+	else{
+		thread_request.open('GET', window.location.pathname + 'thread/' + (parseInt(thread_id) - 1), true);
+	}
 
 	var data = [];
-	request.onload = function() {
+	thread_request.onload = function() {
 	  if (this.status >= 200 && this.status < 400) {
 	    // Success! put parsed stuff in data
-	    data = JSON.parse(this.response);
-	    consumeData(data);
+	    console.log(this.response);
+	    data[0] = JSON.parse(this.response);
+	    //true cause its a new torrent and also passing the torrent itself right on thru
+	    if(isPost){
+	    	appendToBody(data[0], false, thread_id, null, true, newTorrent);
+	  		//thread, isThread, containing_thread_id, callingDiv, isNew, newTorrent
+	    }else{
+	    	consumeData(data, true ,newTorrent);
+		}
 	  } else {
 	    // We reached our target server, but it returned an error
-	    console.log('server fucked up fam')
+	    console.log('server screwed up update request')
 	  }
 	};
 
-	request.onerror = function() {
+	thread_request.onerror = function() {
 	  // There was a connection error of some sort
 	  console.log('connection error')
 	};
 
-	request.send();
+	thread_request.send();
 }
 
 
@@ -60,7 +74,7 @@ function sendThread(){
   var text = document.getElementById("comment").value;
   var title = document.getElementById("titleentry").value;
   var afile = document.getElementById("fileupload").files[0];
-  console.log(afile);
+  //console.log(afile);
   var textBlob = new Blob([text], {type : "text/plain"});
   var data = [textBlob, afile];
 
@@ -79,7 +93,19 @@ function sendThread(){
 
     console.log(magnetLink);
     threadRequest.open('POST', window.location.pathname +'post/thread/');
+    
+    //callback to get the new thread's id from the server 
+    threadRequest.onreadystatechange = function() {//Call a function when the state changes.
+    	if(threadRequest.readyState == 4 && threadRequest.status == 200) {
+        	var newId = threadRequest.responseText;
+        	//adding code to update thread here
+    		updateThread(torrent, newId);
+    	}
+	}
     threadRequest.send(data);
+
+    
+
   });
   return false;
 }
@@ -101,10 +127,14 @@ function sendPost(post_id, thread_id){
     var data = new FormData();
     data.append('magnet', magnetLink);
 
-    console.log(magnetLink);
-
-
     threadRequest.open('POST',  window.location.pathname + 'post/' + thread_id);
+    threadRequest.onreadystatechange = function() {//Call a function when the state changes.
+    	if(threadRequest.readyState == 4 && threadRequest.status == 200) {
+        	var newPostId = threadRequest.responseText;
+        	//adding code to update post here
+    		updateThread(torrent, thread_id, true, newPostId);
+    	}
+	}
     threadRequest.send(data);
   });
   return false;
@@ -112,26 +142,28 @@ function sendPost(post_id, thread_id){
 }
 
 //this function takes the parsed data and appends it to the html as post elements
-function consumeData(dataArray){
+//isUpadate is a boolean that is true if the consumedata call is for an update 
+//so that the torrent doesnt get added again and cause an error.
+function consumeData(dataArray, isNew, newTorrent){
 	// the contents of data are in this format Arrayofthreads[thread[posts]]
 	console.log(dataArray);
 	//iterate through all the threads
 	for (var i = 0, len = dataArray.length; i < len; i++) {
 	  thread = dataArray[i];
 
-	  appendToBody(thread, true)
-
+	  appendToBody(thread, true, null, null, isNew, newTorrent);
+	  //          thread, isThread, containing_thread_id, callingDiv, isNew, newTorrent
 	  //now loop through the posts in the thread
 	  //for (var j = 0, len2 = thread.posts.length; j < len2; j++) {
 	  if(thread.posts.length < 3){
 	  	for(var j = 0, len2 = thread.posts.length; j < len2; j++){ 
-	  		appendToBody(thread.posts[j], false, thread.post_id);
-	  	}
+	  		appendToBody(thread.posts[j], false, thread.post_id, null, isNew, newTorrent);
+	  	} //thread, isThread, containing_thread_id, callingDiv, isNew, newTorrent
 	  }else{
 	  	//normal case, thread had more than 3 posts also display show posts
 	  	for(var j = 0; j < 3; j++){
-	  		appendToBody(thread.posts[j], false, thread.post_id);
-	  	}
+	  		appendToBody( thread.posts[j], false, thread.post_id, null,isNew, newTorrent);
+	  	}  
 
 	  	appendShowPosts(thread);
 	  }
@@ -207,7 +239,8 @@ function noreply(){
 //this function was initially code just for threads that i modified
 //too lazy to change the comments or varible names WATCH OUT
 //containing_thread_id is only for posts
-function appendToBody(thread, isThread, containing_thread_id, callingDiv){
+//isNew is a boolean to stop duplicate torrents from getting added and newTorrent is the new post's torrent
+function appendToBody(thread, isThread, containing_thread_id, callingDiv, isNew, newTorrent){
 	var threadDiv = document.createElement('div');
 	threadDiv.setAttribute('class', 'thread');
 
@@ -254,33 +287,52 @@ function appendToBody(thread, isThread, containing_thread_id, callingDiv){
 	var torrentId = thread.post_magnet_uri;  
 	var cancel = false;
 
+	//only add the new torrent if the post/thread isnt already added to the torrent
+	if(isNew !== true){
 	//this is where we fetch the torrent
-	client.add(torrentId, function (torrent) {
-	  // first file is the post, second is the image for now
-	  //torrent.on('metadata',function() {
-			  //if (torrent.file.length > 4000000)
-			  //	torrent.pause();
-			  //});
-	  if(torrent.length > 4000000){
-	  	torrent.pause();
-	  	//this line doesnt actually delete the torrent if some has been downloaded already
-	  	client.remove(torrent);
-	  	console.log('torrent too large removed from client')
-	  }
+		console.log(isNew);
+		client.add(torrentId, function (torrent) {
+		  // first file is the post, second is the image for now
+		  //torrent.on('metadata',function() {
+				  //if (torrent.file.length > 4000000)
+				  //	torrent.pause();
+				  //});
+		  if(torrent.length > 4000000){
+		  	torrent.pause();
+		  	//this line doesnt actually delete the torrent if some has been downloaded already
+		  	client.remove(torrent);
+		  	console.log('torrent too large removed from client')
+		  }
 
-	  var file = torrent.files[0];
-	  var image = torrent.files[1];
+		  var file = torrent.files[0];
+		  var image = torrent.files[1];
 
-	  //can only render text files to an iframe, may change this later
-	  file.renderTo(postFrame);
+		  //can only render text files to an iframe, may change this later
+		  file.renderTo(postFrame);
 
-	  if(image){
-	  	imgTag.setAttribute('height', '200')
-		imgTag.setAttribute('onclick', 'resize(this)')
-	 	image.renderTo(imgTag);
-	  }	
+		  if(image){
+		  	imgTag.setAttribute('height', '200')
+			imgTag.setAttribute('onclick', 'resize(this)')
+		 	image.renderTo(imgTag);
+		  }	
 
-	}) 
+		})
+	}
+	else if(isNew === true){
+		console.log('in the right spot my nigga');
+		//if we're in here it means it's a new post/thread
+		var file = newTorrent.files[0];
+		var image = newTorrent.files[1];
+
+		 //can only render text files to an iframe, may change this later
+		file.renderTo(postFrame);
+
+		if(image){
+		  	imgTag.setAttribute('height', '200')
+			imgTag.setAttribute('onclick', 'resize(this)')
+		 	image.renderTo(imgTag);
+		}	
+	}
 
 	filesDiv.appendChild(imgTag);
 	postBody.appendChild(postFrame);
@@ -289,7 +341,7 @@ function appendToBody(thread, isThread, containing_thread_id, callingDiv){
 	threadDiv.appendChild(introP);
 	threadDiv.appendChild(filesDiv);
 	threadDiv.appendChild(postBody);
-
+	
 	if(callingDiv){
 		callingDiv.innerHTML = '';
 		callingDiv.removeAttribute('class');
@@ -298,6 +350,8 @@ function appendToBody(thread, isThread, containing_thread_id, callingDiv){
 	//change this line later when we make a container
 	document.body.appendChild(threadDiv);
 	}
+	
+
 }
 
 function resize(element){
