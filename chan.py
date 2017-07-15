@@ -174,7 +174,13 @@ def get_post(board_letter, thread_id, post_id):
 	if request.method == "GET":
 		if 0 <= post_id:
 			#WORKING ON THIS
-			return json.dumps(boards[board_letter][thread_id].posts[].find, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+			#this is fucking nasty, fix it pls
+			for post in boards[board_letter][thread_id].posts:
+				if post_id == post.post_id:
+					return json.dumps( post, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+				else:
+					return 'post not found'
+			
 		return 'post id failure'
 	return 'request failure'
 

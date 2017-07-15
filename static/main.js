@@ -36,6 +36,7 @@ function updateThread(newTorrent, thread_id, isPost, post_id){
 	//this request is broken and needs to be fixed!!------------------------------
 	if(isPost){
 		//if its a post and not a thread
+		console.log(window.location.pathname + 'posts/' + (parseInt(thread_id))  + '/'+ (parseInt(post_id)))
 		thread_request.open('GET', window.location.pathname + 'posts/' + (parseInt(thread_id))  + '/'+ (parseInt(post_id)), true);
 	}
 	else{
