@@ -169,13 +169,15 @@ def create_post(thread_id, board_letter):
 
 	return str(post_count[board_letter])
 
-@app.route("/<string:board_letter>/posts/<int:thread_id>/<int:post_id>", methods=['GET'])
+@app.route("/<string:board_letter>/posts/<int:thread_id>/<int:post_id>", methods=['GET'])	
 def get_post(board_letter, thread_id, post_id):
 	if request.method == "GET":
 		if 0 <= post_id:
 			#WORKING ON THIS
 			#this is fucking nasty, fix it pls
-			for post in boards[board_letter][thread_id].posts:
+			for post in boards[board_letter][thread_id - 1].posts:
+				#can remove the print statement for production 
+				print(boards[board_letter][thread_id - 1].posts)
 				if post_id == post.post_id:
 					return json.dumps( post, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 				else:
