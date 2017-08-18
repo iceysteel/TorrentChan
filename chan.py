@@ -177,7 +177,9 @@ def get_post(board_letter, thread_id, post_id):
 			#this is fucking nasty, fix it pls
 			for post in boards[board_letter][thread_id - 1].posts:
 				#can remove the print statement for production 
-				print(boards[board_letter][thread_id - 1].posts)
+				for post in boards[board_letter][thread_id - 1].posts:
+					print(post.post_id)
+
 				if post_id == post.post_id:
 					return json.dumps( post, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 				else:
@@ -213,9 +215,9 @@ def create_thread(board_letter):
 @app.route('/<string:board_letter>/thread/<int:thread_id>', methods=['GET'])
 def get_thread(board_letter, thread_id):
 	if request.method == "GET":
-		if 0 <= thread_id < len(boards[board_letter]):
-			return json.dumps(boards[board_letter][thread_id], default=lambda o: o.__dict__, sort_keys=True, indent=4)
-
+		if 0 <= thread_id < post_count[board_letter]+1:
+			return json.dumps( next((x for x in boards[board_letter] if x.thread_id == thread_id), None), default=lambda o: o.__dict__, sort_keys=True, indent=4)
+		return "wrong post number"
 
 
 #this route gets or posts captcha

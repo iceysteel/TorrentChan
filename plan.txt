@@ -32,6 +32,8 @@ TODO:
 	
 	-some way to refresh page without losing all the torrents
 
+
+
 	
 
 	-detect large files client side and be able to click to download(UNFINISHED AND IMPORTANT)
@@ -43,3 +45,6 @@ BEFORE RELEASE:
 *remove all testing server shit
 * tell people when they can't post cause they havent filled captcha
 * some way to save the database
+
+BUGS!!!------------------
+- fontend shows replies to a thread in the lowest thread on a page if updating one by one (replies not in correct thread)

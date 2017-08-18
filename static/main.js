@@ -133,7 +133,11 @@ function sendPost(post_id, thread_id){
     	if(threadRequest.readyState == 4 && threadRequest.status == 200) {
         	var newPostId = threadRequest.responseText;
         	//adding code to update post here
-    		updateThread(torrent, thread_id, true, newPostId);
+        	//setTimeout(function(){
+			   //this is a hardcoded 5 second wait so that the server has time to process the post
+			   updateThread(torrent, thread_id, true, newPostId);
+			//}, 5000);
+
     	}
 	}
     threadRequest.send(data);
@@ -232,6 +236,8 @@ function noreply(){
   var titleentry = document.getElementById("titleentry");
   var replyintro = document.getElementById("replyintro");
   var diebutton = document.getElementById("diebutton");
+  var submitbutton = document.getElementById("submitbutton");
+  submitbutton.setAttribute('onclick', 'sendThread()');
   diebutton.style.display = "none";
   titleentry.style.display = "inherit";
   replyintro.innerHTML = "<b>New Thread:</b>";
