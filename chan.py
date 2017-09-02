@@ -174,16 +174,22 @@ def get_post(board_letter, thread_id, post_id):
 	if request.method == "GET":
 		if 0 <= post_id:
 			#WORKING ON THIS
-			#this is fucking nasty, fix it pls
-			for post in boards[board_letter][thread_id - 1].posts:
-				#can remove the print statement for production 
-				for post in boards[board_letter][thread_id - 1].posts:
+			#this is fucking nasty, fix it pls actually wait it even worse now that I fixed the thread problem
+			#just use the funtion to get the thread
+			thread = get_thread_internal(board_letter, thread_id)
+			print thread
+			if not thread:
+				return "thread not found"
+			else:
+				print thread.posts
+				for post in thread.posts:
+					#can remove the print statement for production 
 					print(post.post_id)
 
-				if post_id == post.post_id:
-					return json.dumps( post, default=lambda o: o.__dict__, sort_keys=True, indent=4)
-				else:
-					return 'post not found'
+					if post_id == post.post_id:
+						return json.dumps( post, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+					else:
+						return 'post not found'
 			
 		return 'post id failure'
 	return 'request failure'
@@ -211,13 +217,28 @@ def create_thread(board_letter):
 	return str(post_count[board_letter])
 
 
-#gets a singe threads json, used to update threads on the page individually
+#gets a single threads json, used to update threads on the page individually
+#if internal is true its just a request from the get_post function
 @app.route('/<string:board_letter>/thread/<int:thread_id>', methods=['GET'])
 def get_thread(board_letter, thread_id):
 	if request.method == "GET":
 		if 0 <= thread_id < post_count[board_letter]+1:
-			return json.dumps( next((x for x in boards[board_letter] if x.thread_id == thread_id), None), default=lambda o: o.__dict__, sort_keys=True, indent=4)
+			for thread in boards[board_letter]:
+				print thread.thread_id
+				
+				if thread_id == thread.thread_id:
+					return json.dumps( thread, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 		return "wrong post number"
+
+#UPDATE AS THE ABOVE IS UPDATED!!!
+def get_thread_internal(board_letter, thread_id):
+	if 0 <= thread_id < post_count[board_letter]+1:
+		for thread in boards[board_letter]:
+			print thread.thread_id
+			
+			if thread_id == thread.thread_id:
+				return thread
+	return False
 
 
 #this route gets or posts captcha

@@ -1,5 +1,10 @@
 //I really hate writing javascript
 
+//babby function to handle the occasional wait
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 //this initializes a webtorrent client
 var client = new WebTorrent();
 client.on('error', function (err) { console.log(err);})
@@ -32,6 +37,7 @@ request.send();
 
 //updates threads without changing the page
 function updateThread(newTorrent, thread_id, isPost, post_id){
+	sleep(1000);
 	var thread_request = new XMLHttpRequest();
 	//this request is broken and needs to be fixed!!------------------------------
 	if(isPost){
@@ -40,7 +46,7 @@ function updateThread(newTorrent, thread_id, isPost, post_id){
 		thread_request.open('GET', window.location.pathname + 'posts/' + (parseInt(thread_id))  + '/'+ (parseInt(post_id)), true);
 	}
 	else{
-		thread_request.open('GET', window.location.pathname + 'thread/' + (parseInt(thread_id) - 1), true);
+		thread_request.open('GET', window.location.pathname + 'thread/' + (parseInt(thread_id)), true);
 	}
 
 	var data = [];
@@ -48,6 +54,10 @@ function updateThread(newTorrent, thread_id, isPost, post_id){
 	  if (this.status >= 200 && this.status < 400) {
 	    // Success! put parsed stuff in data
 	    console.log(this.response);
+	    if(this.response === "wrong post number"){
+	    	updateThread(newTorrent, thread_id, isPost, post_id);
+	    }
+
 	    data[0] = JSON.parse(this.response);
 	    //true cause its a new torrent and also passing the torrent itself right on thru
 	    if(isPost){
@@ -59,6 +69,7 @@ function updateThread(newTorrent, thread_id, isPost, post_id){
 	  } else {
 	    // We reached our target server, but it returned an error
 	    console.log('server screwed up update request')
+	    //updateThread(newTorrent, thread_id, isPost, post_id);
 	  }
 	};
 
@@ -99,6 +110,7 @@ function sendThread(){
     threadRequest.onreadystatechange = function() {//Call a function when the state changes.
     	if(threadRequest.readyState == 4 && threadRequest.status == 200) {
         	var newId = threadRequest.responseText;
+        	console.log(newId);
         	//adding code to update thread here
     		updateThread(torrent, newId);
     	}
