@@ -169,6 +169,10 @@ def create_post(thread_id, board_letter):
 
 	return str(post_count[board_letter])
 
+
+#this route does jack shit now that we just get the whole thread
+#also it doesnt work right for some reason. 
+#DEPRCATED AND BROKEN
 @app.route("/<string:board_letter>/posts/<int:thread_id>/<int:post_id>", methods=['GET'])	
 def get_post(board_letter, thread_id, post_id):
 	if request.method == "GET":

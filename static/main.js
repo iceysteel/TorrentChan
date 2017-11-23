@@ -42,8 +42,10 @@ function updateThread(newTorrent, thread_id, isPost, post_id){
 	//this request is broken and needs to be fixed!!------------------------------
 	if(isPost){
 		//if its a post and not a thread
-		console.log(window.location.pathname + 'posts/' + (parseInt(thread_id))  + '/'+ (parseInt(post_id)))
-		thread_request.open('GET', window.location.pathname + 'posts/' + (parseInt(thread_id))  + '/'+ (parseInt(post_id)), true);
+		//console.log(window.location.pathname + 'posts/' + (parseInt(thread_id))  + '/'+ (parseInt(post_id)))
+		//thread_request.open('GET', window.location.pathname + 'posts/' + (parseInt(thread_id))  + '/'+ (parseInt(post_id)), true);
+		// the above code is depricated since we just get the whole thread and go through it client side now
+		thread_request.open('GET', window.location.pathname + 'thread/' + (parseInt(thread_id)), true);
 	}
 	else{
 		thread_request.open('GET', window.location.pathname + 'thread/' + (parseInt(thread_id)), true);
@@ -53,15 +55,26 @@ function updateThread(newTorrent, thread_id, isPost, post_id){
 	thread_request.onload = function() {
 	  if (this.status >= 200 && this.status < 400) {
 	    // Success! put parsed stuff in data
-	    console.log(this.response);
+	    //console.log(post_id);
+	    //console.log(this.response);
 	    if(this.response === "wrong post number"){
 	    	updateThread(newTorrent, thread_id, isPost, post_id);
 	    }
 
 	    data[0] = JSON.parse(this.response);
 	    //true cause its a new torrent and also passing the torrent itself right on thru
+	    //in this if loop iterate through the thread to get the correct post to send to the ui funtion
 	    if(isPost){
-	    	appendToBody(data[0], false, thread_id, null, true, newTorrent);
+	    	var thread = data[0];
+	    	//console.log(thread);
+	    	for (var i = 0, len = thread.posts.length; i < len; i++) {
+				console.log(post_id);
+				if(thread.posts[i].post_id === parseInt(post_id) ){
+					appendToBody(thread.posts[i], false, thread_id, null, true, newTorrent);
+				}
+			}
+
+	    	
 	  		//thread, isThread, containing_thread_id, callingDiv, isNew, newTorrent
 	    }else{
 	    	consumeData(data, true ,newTorrent);
