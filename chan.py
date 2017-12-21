@@ -122,10 +122,10 @@ def admin(board_letter):
 
 
 #HUGE SECURITY PROBLEM, REMOVE WHEN GOING TO PRODUCTION
-@app.route('/static/<string:static_file>')
+'''@app.route('/static/<string:static_file>')
 def temp_static_files(static_file):
 	return app.send_static_file(static_file)
-
+'''
 
 @app.route("/<string:board_letter>/catalog")
 def catalog(board_letter):
@@ -206,6 +206,8 @@ def create_thread(board_letter):
 	if request.method == 'POST':
 		if request.form['magnet'] and request.form['title']:
 			if request.remote_addr in allowed_posters:
+				if len(boards[board_letter]) > 300 : 
+					boards[board_letter].pop(0)
 				#calculate the new id
 				global post_count
 				post_count[board_letter] = post_count[board_letter] + 1

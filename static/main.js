@@ -20,7 +20,7 @@ request.onload = function() {
   if (this.status >= 200 && this.status < 400) {
     // Success! put parsed stuff in data
     data = JSON.parse(this.response);
-    consumeData(data);
+    consumeData(data, false);
   } else {
     // We reached our target server, but it returned an error
     console.log('server fucked up fam')
